@@ -114,7 +114,7 @@ async function dapatkanRekomendasi() {
 
   try {
     // Catatan: Ganti URL API di bawah ini dengan backend AI Anda yang sebenarnya
-    const res = await fetch("https://activity-ai-backend.vercel.app/api/recommend-movie", {
+    const res = await fetch("https://activity-ai-backend.vercel.app/api/analyze", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -149,7 +149,7 @@ async function generatePoster() {
 
   try {
     // Catatan: Ganti URL API di bawah ini dengan backend AI Anda yang sebenarnya
-    const res = await fetch("https://activity-ai-backend.vercel.app/api/generate-poster", {
+    const res = await fetch("https://activity-ai-backend.vercel.app/api/generate-images", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
