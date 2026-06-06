@@ -36,6 +36,7 @@
       cursor: pointer;
     }
     button:hover { background-color: #004494; }
+    button:disabled { background-color: #999; cursor: not-allowed; }
     .box {
       border: 1px solid #ddd;
       background-color: #fafafa;
@@ -63,7 +64,7 @@
   <input id="searchQuery" placeholder="contoh: Spider-Man, Action, Horor komedi...">
 
   <button onclick="tambahRiwayat()">Tambah Pencarian</button>
-  <button onclick="dapatkanRekomendasi()">Dapatkan Rekomendasi AI</button>
+  <button id="btnRekomendasi" onclick="dapatkanRekomendasi()">Dapatkan Rekomendasi AI</button>
 
   <p id="totalPencarian">Total riwayat: 0 pencarian</p>
 
@@ -75,7 +76,7 @@
 
   <h3>Generate Poster Film Khusus (AI):</h3>
   <p style="font-size: 14px; color: #666;">AI akan membuat poster film fiktif berdasarkan selera riwayat Anda.</p>
-  <button id="generateBtn" style="display:inline-block;" onclick="generatePoster()">Buat Poster AI</button>
+  <button id="generateBtn" style="display:inline-block;" disabled onclick="generatePoster()">Buat Poster AI</button>
   <div id="imageStatus" class="box" style="border:none; background:none; padding:0; min-height: auto; margin-top: 10px;">Belum ada poster.</div>
   <img id="aiImage">
 
@@ -85,7 +86,7 @@
 let riwayatPencarian = [];
 let hasilAnalisis = "";
 
-// Ganti URL ini sesuai backend Vercel kamu
+// URL backend
 const ANALYZE_API = "https://projek-film-backend.vercel.app/api/analyze";
 const IMAGE_API = "https://projek-film-backend.vercel.app/api/generate-images";
 
@@ -101,6 +102,7 @@ function resetPoster() {
   document.getElementById("aiImage").style.display = "none";
   document.getElementById("aiImage").src = "";
   document.getElementById("imageStatus").innerText = "Belum ada poster.";
+  document.getElementById("generateBtn").disabled = true;
 }
 
 function tambahRiwayat() {
@@ -118,6 +120,8 @@ async function dapatkanRekomendasi() {
   resetPoster();
 
   const daftarRiwayat = riwayatPencarian.join(", ");
+  const btnGenerate = document.getElementById("generateBtn");
+  btnGenerate.disabled = true;
 
   try {
     const res = await fetch(ANALYZE_API, {
@@ -129,23 +133,23 @@ async function dapatkanRekomendasi() {
     const json = await res.json();
     hasilAnalisis = json.result || "";
     document.getElementById("result").innerText = hasilAnalisis || json.error || "Tidak ada rekomendasi yang ditemukan.";
+
+    if (hasilAnalisis) {
+      btnGenerate.disabled = false; // Aktifkan tombol poster
+    }
+
   } catch {
     document.getElementById("result").innerText = "Gagal menghubungi server AI.";
   }
 }
 
 async function generatePoster() {
-  if (!riwayatPencarian.length) {
-    document.getElementById("imageStatus").innerText = "Masukkan riwayat pencarian terlebih dahulu agar AI tahu selera Anda.";
-    return;
-  }
-  if (!hasilAnalisis) {
-    document.getElementById("imageStatus").innerText = "Klik Dapatkan Rekomendasi AI terlebih dahulu.";
-    return;
-  }
+  if (!riwayatPencarian.length || !hasilAnalisis) return;
 
-  document.getElementById("imageStatus").innerText = "Sedang membuat poster inspirasi...";
-  document.getElementById("aiImage").style.display = "none";
+  const status = document.getElementById("imageStatus");
+  const img = document.getElementById("aiImage");
+  img.style.display = "none";
+  status.innerText = "Sedang membuat poster inspirasi...";
 
   try {
     const res = await fetch(IMAGE_API, {
@@ -155,17 +159,15 @@ async function generatePoster() {
     });
 
     const json = await res.json();
-
     if (json.image) {
-      const img = document.getElementById("aiImage");
       img.src = `data:image/png;base64,${json.image}`;
       img.style.display = "block";
-      document.getElementById("imageStatus").innerText = "Poster berhasil dibuat berdasarkan selera Anda!";
+      status.innerText = "Poster berhasil dibuat berdasarkan selera Anda!";
     } else {
-      document.getElementById("imageStatus").innerText = json.error || "Gagal membuat poster.";
+      status.innerText = json.error || "Gagal membuat poster.";
     }
   } catch {
-    document.getElementById("imageStatus").innerText = "Gagal menghubungi server pembuat gambar.";
+    status.innerText = "Gagal menghubungi server pembuat gambar.";
   }
 }
 
